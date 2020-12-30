@@ -138,12 +138,9 @@ def scrape_suna_article(url_list):
 
 
 def main():
-    # print("### SUDAN TRIBUNE ###")
-    # a = scrape_st_article_urls()
-    # scrape_st_article(a)
-    print("### SUNA-SD ###")
-    b = scrape_suna_article_urls()
-    scrape_suna_article(b)
+    print("### SUDAN TRIBUNE ###")
+    a = scrape_st_article_urls()
+    scrape_st_article(a)
 
 
 if __name__ == "__main__":
