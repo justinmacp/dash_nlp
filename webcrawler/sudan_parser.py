@@ -5,7 +5,7 @@ import os
 from datetime import date
 import pathlib
 import re
-
+import pandas as pd
 
 today = date.today()
 dstr = today.strftime("%Y%m%d")
@@ -14,6 +14,9 @@ ARTICLES = 'ARTICLES'
 SUDAN = 'SUDAN'
 SDT = 'SDT'
 SUNA = 'SUNA'
+
+months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November',
+          'December']
 
 
 # SCRAPERS FOR HTML PAGES
@@ -55,7 +58,8 @@ def scrape_st_article(url_list):
             paragraph = paragraph.replace('\n', '')
             if no_paragraphs == 0:
                 if paragraph is not None:
-                    match = re.match(r"(?P<month>[A-Za-z]+) (?P<day>[0-9]{1,2}),? (?P<year>[0-9]{4}) \((?P<city>.+)\)", paragraph)
+                    match = re.match(r"(?P<month>[A-Za-z]+) (?P<day>[0-9]{1,2}),? (?P<year>[0-9]{4}) \((?P<city>.+)\)",
+                                     paragraph)
                     if match:
                         month = match.group('month')
                         day = match.group('day')
@@ -63,18 +67,17 @@ def scrape_st_article(url_list):
                         city = match.group('city')
                     no_paragraphs += 1
             article_text += (paragraph + '\n')
-        texts.append({'title': title,
-                      'text': article_text,
-                      'url': url + url_list[i],
-                      'country': 'SD',
-                      'source': 'Sudan Times',
-                      'month': month,
-                      'day': day,
-                      'year': year,
-                      'city': city})
+        print(year, month, day)
+        if year is not None and month is not None and day is not None:
+            texts.append({'title': title,
+                          'article_text': article_text,
+                          'url': url + url_list[i],
+                          'country': 'SD',
+                          'newspaper': 'Sudan Times',
+                          'publication_date': date(year=int(year), month=months.index(month) + 1, day=int(day)),
+                          'city': city})
     pathlib.Path(os.path.join(ARTICLES, SUDAN, SDT)).mkdir(parents=True, exist_ok=True)
-    with open(os.path.join(ARTICLES, SUDAN, SDT, 'sdt_latest_news_' + dstr + '.json'), 'w') as outfile:
-        json.dump(texts, outfile)
+    return texts
 
 
 def scrape_suna_article_urls():
@@ -133,14 +136,14 @@ def scrape_suna_article(url_list):
                       'year': year,
                       'city': city})
     pathlib.Path(os.path.join(ARTICLES, SUDAN, SUNA)).mkdir(parents=True, exist_ok=True)
+    print(pd.DataFrame.from_dict(texts).head())
     with open(os.path.join(ARTICLES, SUDAN, SUNA, 'suna_latest_news_' + dstr + '.json'), 'w') as outfile:
         json.dump(texts, outfile)
 
 
 def main():
-    print("### SUDAN TRIBUNE ###")
     a = scrape_st_article_urls()
-    scrape_st_article(a)
+    texts = scrape_st_article(a)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 import mysql.connector
 from mysql.connector import Error
+import  pandas as pd
 
 
 create_users_table = """
@@ -62,6 +63,24 @@ def create_connection_to_mysql(host_name, user_name, user_password):
         print(f"The error '{e}' occurred")
 
     return connection
+
+
+def pandas_df_to_mysql(connection, df):
+    try:
+        df.to_sql()
+        connection.commit()
+        print("Query executed successfully")
+    except Error as e:
+        print(f"The error '{e}' occurred")
+
+
+def mysql_to_pandas_df(connection, query):
+    try:
+        pd.read_sql(sql=query, con=connection)
+        connection.commit()
+        print("Query executed successfully")
+    except Error as e:
+        print(f"The error '{e}' occurred")
 
 
 def create_connection_to_db(host_name, user_name, user_password, db_name):

@@ -5,6 +5,7 @@ import os
 from datetime import date
 import pathlib
 from urllib.error import HTTPError
+import pandas as pd
 
 today = date.today()
 dstr = today.strftime("%Y%m%d")
@@ -71,6 +72,7 @@ def scrape_at_article(url_list):
                           'country': 'AFG',
                           'source': 'Afghanistan Times'})
     pathlib.Path(os.path.join(ARTICLES, AFGHANISTAN, AT)).mkdir(parents=True, exist_ok=True)
+    pd.DataFrame.from_dict(texts).head()
     with open(os.path.join(ARTICLES, AFGHANISTAN, AT, 'at_latest_news_' + dstr + '.json'), 'w') as outfile:
         json.dump(texts, outfile)
 

@@ -9,3 +9,8 @@ The project uses the following tools:
 * Beautifulsoup for webcrawling
 * Docker for containerization
 * mySQL for RMDB (doesn't work with python 3.8 or 3.9)
+
+use nomkl versions of the following libraries:
+
+    conda install nomkl numpy scipy scikit-learn numexpr
+    conda remove mkl mkl-service
