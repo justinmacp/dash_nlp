@@ -1,11 +1,8 @@
 from urllib.request import urlopen as uReq
-import json
 from bs4 import BeautifulSoup
-import os
 from datetime import date
-import pathlib
 import re
-import pandas as pd
+from gensim_dtm.gensim_lda import convert_to_raw_text
 
 today = date.today()
 dstr = today.strftime("%Y%m%d")
@@ -17,9 +14,6 @@ SUNA = 'SUNA'
 
 months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November',
           'December']
-
-
-# SCRAPERS FOR HTML PAGES
 
 
 def scrape_st_article_urls():
@@ -61,6 +55,9 @@ def scrape_st_article(url_list):
                     match = re.match(r"(?P<month>[A-Za-z]+) (?P<day>[0-9]{1,2}),? (?P<year>[0-9]{4}) \((?P<city>["
                                      r"A-Z]+)\)",
                                      paragraph)
+                    paragraph = re.sub(r"(?P<month>[A-Za-z]+) (?P<day>[0-9]{1,2}),? (?P<year>[0-9]{4}) \((?P<city>["
+                                       r"A-Z]+)\) -", '', paragraph)
+                    print(paragraph)
                     if match:
                         month = match.group('month')
                         day = match.group('day')
@@ -69,71 +66,15 @@ def scrape_st_article(url_list):
                     no_paragraphs += 1
             article_text += (paragraph + '\n')
         if year is not None and month is not None and day is not None:
+            clean_text = convert_to_raw_text(article_text)
             texts.append({'title': title,
-                          'article_text': article_text,
+                          'article_text': clean_text,
                           'url': url + url_list[i],
                           'country': 'SD',
                           'newspaper': 'Sudan Times',
                           'publication_date': date(year=int(year), month=months.index(month) + 1, day=int(day)),
                           'city': city})
     return texts
-
-
-def scrape_suna_article_urls():
-    url = 'https://suna-sd.net/en'
-    req = uReq(url)
-    soup = BeautifulSoup(req.read(), "html.parser")
-    req.close()
-    article_links = []
-    # find the link to the article on the top right
-    tr = soup.find('div', class_='content_top_right')
-    a = tr.find('a')
-    article_links.append(a['href'])
-    # find the rest of the article links
-    bl = soup.find('div', class_='content_bottom_left')
-    for link in bl.find_all('li'):
-        a = link.find('a')
-        article_links.append(a['href'])
-    return article_links
-
-
-def scrape_suna_article(url_list):
-    url = 'https://suna-sd.net'
-    texts = []
-    for i in range(0, len(url_list)):
-        month = None
-        day = None
-        year = None
-        city = None
-        req = uReq(url + url_list[i])
-        soup = BeautifulSoup(req.read(), "html.parser")
-        req.close()
-        title = soup.find('h2', class_='post_titile').get_text()
-        content = soup.find('div', class_='single_page_content')
-        article_text = ''
-        no_paragraphs = 0
-        # the text starts with the headline in the first paragraph. We don't need this
-        for p in content.find_all('p'):
-            paragraph = p.get_text()
-            paragraph = paragraph.replace('\n', '')
-            if no_paragraphs == 1:
-                print(paragraph)
-                if paragraph is not None:
-                    match = re.match("", paragraph)
-                    if match:
-                        print('hello')
-            if not no_paragraphs == 0:
-                article_text += (paragraph + '\n')
-            no_paragraphs += 1
-        texts.append({'title': title,
-                      'text': article_text,
-                      'url': url + url_list[i],
-                      'country': 'SD',
-                      'source': 'SUNA',
-                      'month': month,
-                      'day': day,
-                      'year': year,
-                      'city': city})
 
 
 def main():

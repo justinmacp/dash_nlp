@@ -19,15 +19,17 @@ nltk.download('stopwords')
 os.chdir('..')
 # Read data into papers
 conn = create_connection('localhost', 'root', 'Ju5Ky1M@', 'news')
-table_name = 'collection'
-papers = pd.read_sql("SELECT * FROM %s" % table_name, conn)
+papers = pd.read_sql("SELECT * FROM collection", conn)
 # Print head
 print(papers.head())
 
-# Remove punctuation
-papers['paper_text_processed'] = papers['article_text'].map(lambda x: re.sub('[,.!?]', '', x))
-# Convert the titles to lowercase
-papers['paper_text_processed'] = papers['paper_text_processed'].map(lambda x: x.lower())
+
+def convert_to_raw_text(text):
+    punctuation_free_text = text.map(lambda x: re.sub('[,.!?]', '', x))
+    return punctuation_free_text.map(lambda x: x.lower())
+
+
+papers['paper_text_processed'] = convert_to_raw_text(papers['article_text'])
 # Print out the first rows of papers
 print(papers['paper_text_processed'].head())
 print(papers['paper_text_processed'].shape)
@@ -43,13 +45,13 @@ wordcloud.to_image()
 plt.show()
 
 stop_words = stopwords.words('english')
-stop_words.extend(['from', 'subject', 're', 'edu', 'use'])
+stop_words.extend(['from', 'subject', 're', 'edu', 'use', 'sudan', 'sudanese', 'said', 'al'])
 
 
 def sent_to_words(sentences):
     for sentence in sentences:
         # deacc=True removes punctuations
-        yield (gensim.utils.simple_preprocess(str(sentence), deacc=True))
+        yield gensim.utils.simple_preprocess(str(sentence), deacc=True)
 
 
 def remove_stopwords(texts):
@@ -69,12 +71,24 @@ id2word = corpora.Dictionary(data_words)
 texts = data_words
 # Term Document Frequency
 corpus = [id2word.doc2bow(text) for text in texts]
+tfidf = gensim.models.TfidfModel(corpus, id2word)
+low_value = 0.25
+
+for i in range(0, len(corpus)):
+    bow = corpus[i]
+    low_value_words = []  # reinitialize to be safe. You can skip this.
+    tfidf_ids = [id for id, value in tfidf[bow]]
+    bow_ids = [id for id, value in bow]
+    low_value_words = [id for id, value in tfidf[bow] if value < low_value]
+    words_missing_in_tfidf = [id for id in bow_ids if
+                              id not in tfidf_ids]  # The words with tf-idf socre 0 will be missing
+
+    new_bow = [b for b in bow if b[0] not in low_value_words and b[0] not in words_missing_in_tfidf]
 # View
 print(corpus[:1][0][:30])
 
-
 # number of topics
-num_topics = 5
+num_topics = 4
 # Build LDA model
 lda_model = gensim.models.LdaMulticore(corpus=corpus,
                                        id2word=id2word,
@@ -83,18 +97,16 @@ lda_model = gensim.models.LdaMulticore(corpus=corpus,
 pprint(lda_model.print_topics())
 doc_lda = lda_model[corpus]
 
-
 # Visualize the topics
-pyLDAvis.enable_notebook()
-LDAvis_data_filepath = os.path.join('./results/ldavis_prepared_'+str(num_topics))
+LDAvis_data_filepath = os.path.join('./results/ldavis_prepared_' + str(num_topics))
 # # this is a bit time consuming - make the if statement True
 # # if you want to execute visualization prep yourself
-if 1 == 1:
-    LDAvis_prepared = pyLDAvis.gensim.prepare(lda_model, corpus, id2word)
-    with open(LDAvis_data_filepath, 'wb') as f:
-        pickle.dump(LDAvis_prepared, f)
+LDAvis_prepared = pyLDAvis.gensim.prepare(lda_model, corpus, id2word)
+with open(LDAvis_data_filepath, 'wb') as f:
+    pickle.dump(LDAvis_prepared, f)
 # load the pre-prepared pyLDAvis data from disk
 with open(LDAvis_data_filepath, 'rb') as f:
     LDAvis_prepared = pickle.load(f)
-pyLDAvis.save_html(LDAvis_prepared, './results/ldavis_prepared_'+ str(num_topics) +'.html')
+pyLDAvis.save_html(LDAvis_prepared, './results/ldavis_prepared_' + str(num_topics) + '.html')
+pyLDAvis.show(LDAvis_prepared)
 LDAvis_prepared
