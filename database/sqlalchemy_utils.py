@@ -1,40 +1,57 @@
-import sqlalchemy as db
+import sqlalchemy
 import pandas as pd
 from mysql.connector import Error
 import datetime
+import mysql
 from database.Upsert import Upsert
 
 
-def create_table():
-    engine = db.create_engine('mysql://root:Ju5Ky1M@@localhost/news')
-    connection = engine.connect()
-    metadata = db.MetaData()
+def create_connection(host_name, user_name, user_password, database=None):
+    connection = None
+    try:
+        connection = mysql.connector.connect(
+            host=host_name,
+            user=user_name,
+            passwd=user_password,
+            db=database
+        )
+        print("Connection to MySQL DB successful")
+    except Error as e:
+        print(f"The error '{e}' occurred")
 
-    emp = db.Table('collection', metadata,
-                   db.Column('title', db.String(128), nullable=False, primary_key=True),
-                   db.Column('article_text', db.Text(), nullable=False),
-                   db.Column('url', db.Text(), nullable=False),
-                   db.Column('country', db.Text(), nullable=False),
-                   db.Column('newspaper', db.Text(), nullable=False),
-                   db.Column('city', db.Text(), nullable=False),
-                   db.Column('publication_date', db.Date(), nullable=False, default=datetime.date(2000, 1, 1))
-                   )
+    return connection
+
+
+def create_table():
+    engine = sqlalchemy.create_engine('mysql://root:Ju5Ky1M@@localhost/news')
+    connection = engine.connect()
+    metadata = sqlalchemy.MetaData()
+
+    emp = sqlalchemy.Table('collection', metadata,
+                           sqlalchemy.Column('title', sqlalchemy.String(128), nullable=False, primary_key=True),
+                           sqlalchemy.Column('article_text', sqlalchemy.Text(), nullable=False),
+                           sqlalchemy.Column('url', sqlalchemy.Text(), nullable=False),
+                           sqlalchemy.Column('country', sqlalchemy.Text(), nullable=False),
+                           sqlalchemy.Column('newspaper', sqlalchemy.Text(), nullable=False),
+                           sqlalchemy.Column('city', sqlalchemy.Text(), nullable=False),
+                           sqlalchemy.Column('publication_date', sqlalchemy.Date(), nullable=False, default=datetime.date(2000, 1, 1))
+                           )
 
     metadata.create_all(engine)
     return engine
 
 
 def insert_data(collection, connection):
-    metadata = db.MetaData()
-    emp = db.Table('collection', metadata,
-                   db.Column('title', db.String(128), nullable=False, primary_key=True),
-                   db.Column('article_text', db.Text(), nullable=False),
-                   db.Column('url', db.Text(), nullable=False),
-                   db.Column('country', db.Text(), nullable=False),
-                   db.Column('newspaper', db.Text(), nullable=False),
-                   db.Column('city', db.Text(), nullable=False),
-                   db.Column('publication_date', db.Date(), nullable=False, default=datetime.date(2000, 1, 1))
-                   )
+    metadata = sqlalchemy.MetaData()
+    emp = sqlalchemy.Table('collection', metadata,
+                           sqlalchemy.Column('title', sqlalchemy.String(128), nullable=False, primary_key=True),
+                           sqlalchemy.Column('article_text', sqlalchemy.Text(), nullable=False),
+                           sqlalchemy.Column('url', sqlalchemy.Text(), nullable=False),
+                           sqlalchemy.Column('country', sqlalchemy.Text(), nullable=False),
+                           sqlalchemy.Column('newspaper', sqlalchemy.Text(), nullable=False),
+                           sqlalchemy.Column('city', sqlalchemy.Text(), nullable=False),
+                           sqlalchemy.Column('publication_date', sqlalchemy.Date(), nullable=False, default=datetime.date(2000, 1, 1))
+                           )
     query = Upsert(emp, collection)
     connection.execute(query)
 
