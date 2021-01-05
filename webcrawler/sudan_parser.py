@@ -57,7 +57,6 @@ def scrape_st_article(url_list):
                                      paragraph)
                     paragraph = re.sub(r"(?P<month>[A-Za-z]+) (?P<day>[0-9]{1,2}),? (?P<year>[0-9]{4}) \((?P<city>["
                                        r"A-Z]+)\) -", '', paragraph)
-                    print(paragraph)
                     if match:
                         month = match.group('month')
                         day = match.group('day')
@@ -67,7 +66,8 @@ def scrape_st_article(url_list):
             article_text += (paragraph + '\n')
         if year is not None and month is not None and day is not None:
             clean_text = convert_to_raw_text(article_text)
-            texts.append({'title': title,
+            clean_title = convert_to_raw_text(title)
+            texts.append({'title': clean_title,
                           'article_text': clean_text,
                           'url': url + url_list[i],
                           'country': 'SD',
@@ -79,7 +79,6 @@ def scrape_st_article(url_list):
 
 def main():
     a = scrape_st_article_urls()
-    print(a)
     texts = scrape_st_article(a)
 
 
