@@ -2,7 +2,7 @@ from urllib.request import urlopen as uReq
 from bs4 import BeautifulSoup
 from datetime import date
 import re
-from gensim_dtm.gensim_lda import convert_to_raw_text
+from text_processing.text_processing_utils import convert_to_raw_text
 
 today = date.today()
 dstr = today.strftime("%Y%m%d")
@@ -79,6 +79,7 @@ def scrape_st_article(url_list):
 
 def main():
     a = scrape_st_article_urls()
+    print(a)
     texts = scrape_st_article(a)
 
 
