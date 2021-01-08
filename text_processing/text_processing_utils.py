@@ -27,4 +27,5 @@ def convert_to_raw_text(text):
     lemmatized_text_without_empty_lists = [x for x in lemmatized_text if x != []]
     lemmatized_individual_word_list = [x[0] for x in lemmatized_text_without_empty_lists]
     lemmatized_text_lowercase = ' '.join(lemmatized_individual_word_list)
+    print(lemmatized_text_lowercase)
     return lemmatized_text_lowercase

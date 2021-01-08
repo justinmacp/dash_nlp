@@ -5,6 +5,7 @@ from dash.dependencies import Input, Output
 from database.sqlalchemy_utils import *
 from gensim_dtm.gensim_lda import perform_lda
 import plotly.express as px
+from text_processing.text_processing_utils import convert_to_raw_text
 
 query_city_names = """
 SELECT DISTINCT city FROM collection 
@@ -52,6 +53,9 @@ def update_graph(grpname):
     query_result = execute_read_query(conn, "SELECT title, article_text FROM collection WHERE city='{}'".format(grpname))
     conn.close()
     news_df = pd.DataFrame(query_result, columns=['title', 'article_text'])
+    for column in range(0,len(news_df)):
+        news_df.iloc[column]['title'] = convert_to_raw_text(news_df.iloc[column]['title'])
+        news_df.iloc[column]['article_text'] = convert_to_raw_text(news_df.iloc[column]['article_text'])
     lda_model = perform_lda(news_df, num_topics=10)
     topic_data_frame = pd.DataFrame(lda_model.show_topics(formatted=False))
     topic_data_frame.loc[:, 'keyword'] = topic_data_frame[1].map(lambda x: x[0][0])

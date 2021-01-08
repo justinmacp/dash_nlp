@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 from datetime import date
 import re
 from text_processing.text_processing_utils import convert_to_raw_text
+from database.sqlalchemy_utils import *
 
 today = date.today()
 dstr = today.strftime("%Y%m%d")
@@ -78,8 +79,12 @@ def scrape_st_article(url_list):
 
 
 def main():
+    engine = create_table()
+    connection = engine.connect()
     a = scrape_st_article_urls()
     texts = scrape_st_article(a)
+    insert_data(texts, connection)
+    connection.close()
 
 
 if __name__ == "__main__":
